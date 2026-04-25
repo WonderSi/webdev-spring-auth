@@ -6,7 +6,9 @@ import com.example.lab5.domain.exception.NotFoundException
 import com.example.lab5.domain.model.Dish
 import com.example.lab5.domain.model.Order
 import com.example.lab5.domain.model.OrderStatus
+import com.example.lab5.domain.model.Role
 import com.example.lab5.domain.model.User
+import org.springframework.security.access.AccessDeniedException
 import com.example.lab5.domain.port.OrderRepositoryPort
 import com.example.lab5.domain.port.UserRepositoryPort
 import com.example.lab5.infrastructure.jpa.entity.DishEntity
@@ -74,6 +76,36 @@ class OrderServiceTest {
         assertThrows<NotFoundException> {
             orderService.findById(999L)
         }
+    }
+
+    @Test
+    fun `findById с userId владельца возвращает заказ`() {
+        val order = Order(id = 1L, userId = 1L, dishes = listOf(testDish))
+        every { orderRepositoryPort.findById(1L) } returns order
+
+        val result = orderService.findById(1L, currentUserId = 1L, currentUserRole = Role.USER)
+
+        assertEquals(1L, result.id)
+    }
+
+    @Test
+    fun `findById с чужим userId бросает AccessDeniedException`() {
+        val order = Order(id = 1L, userId = 1L, dishes = listOf(testDish))
+        every { orderRepositoryPort.findById(1L) } returns order
+
+        assertThrows<AccessDeniedException> {
+            orderService.findById(1L, currentUserId = 2L, currentUserRole = Role.USER)
+        }
+    }
+
+    @Test
+    fun `findById для ADMIN с чужим userId возвращает заказ`() {
+        val order = Order(id = 1L, userId = 1L, dishes = listOf(testDish))
+        every { orderRepositoryPort.findById(1L) } returns order
+
+        val result = orderService.findById(1L, currentUserId = 2L, currentUserRole = Role.ADMIN)
+
+        assertEquals(1L, result.id)
     }
 
     // --- create ---

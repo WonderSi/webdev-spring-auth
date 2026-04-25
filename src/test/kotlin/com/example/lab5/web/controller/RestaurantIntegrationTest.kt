@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
@@ -50,6 +51,7 @@ class RestaurantIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `GET restaurants возвращает 200 и список после создания`() {
         mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -67,6 +69,7 @@ class RestaurantIntegrationTest {
     //POST /api/v1/restaurants
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `POST restaurant возвращает 201 и тело с id, name, address`() {
         mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -80,6 +83,7 @@ class RestaurantIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `POST restaurant с пустым именем возвращает 400 и errors`() {
         mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -92,6 +96,7 @@ class RestaurantIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `POST restaurant с дублирующимся именем возвращает 409`() {
         mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -109,6 +114,7 @@ class RestaurantIntegrationTest {
     //GET /api/v1/restaurants/{id}
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `GET restaurant по id возвращает 200 и данные ресторана`() {
         val createResult = mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -140,6 +146,7 @@ class RestaurantIntegrationTest {
     //PUT /api/v1/restaurants/{id}
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `PUT restaurant обновляет данные и возвращает 200`() {
         val createResult = mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -162,6 +169,7 @@ class RestaurantIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `PUT restaurant с несуществующим id возвращает 404`() {
         mockMvc.put("/api/v1/restaurants/999999") {
             contentType = MediaType.APPLICATION_JSON
@@ -175,6 +183,7 @@ class RestaurantIntegrationTest {
     //DELETE /api/v1/restaurants/{id}
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `DELETE restaurant возвращает 204`() {
         val createResult = mockMvc.post("/api/v1/restaurants") {
             contentType = MediaType.APPLICATION_JSON
@@ -192,11 +201,52 @@ class RestaurantIntegrationTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `DELETE restaurant с несуществующим id возвращает 404`() {
         mockMvc.delete("/api/v1/restaurants/999999")
             .andExpect {
                 status { isNotFound() }
                 jsonPath("$.status") { value(404) }
+            }
+    }
+
+    // --- Тесты безопасности ---
+
+    @Test
+    fun `POST restaurant без токена возвращает 401`() {
+        mockMvc.post("/api/v1/restaurants") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"name": "Тест", "address": "ул. Тестовая, 1"}"""
+        }.andExpect {
+            status { isUnauthorized() }
+        }
+    }
+
+    @Test
+    @WithMockUser(roles = ["USER"])
+    fun `POST restaurant с ролью USER возвращает 403`() {
+        mockMvc.post("/api/v1/restaurants") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"name": "Тест", "address": "ул. Тестовая, 1"}"""
+        }.andExpect {
+            status { isForbidden() }
+        }
+    }
+
+    @Test
+    fun `DELETE restaurant без токена возвращает 401`() {
+        mockMvc.delete("/api/v1/restaurants/1")
+            .andExpect {
+                status { isUnauthorized() }
+            }
+    }
+
+    @Test
+    @WithMockUser(roles = ["USER"])
+    fun `DELETE restaurant с ролью USER возвращает 403`() {
+        mockMvc.delete("/api/v1/restaurants/1")
+            .andExpect {
+                status { isForbidden() }
             }
     }
 }
