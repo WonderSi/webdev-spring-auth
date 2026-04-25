@@ -5,6 +5,7 @@ import com.example.lab5.web.dto.*
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
@@ -25,6 +26,7 @@ class DishController(
         ResponseEntity.ok(dishService.findById(id).toResponse())
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     fun createDish(@Valid @RequestBody request: DishCreateRequest): ResponseEntity<DishResponse> {
         val (dish, isCreated) = dishService.create(request.toDomain())
         return if (isCreated) {
@@ -35,6 +37,7 @@ class DishController(
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     fun updateDish(
         @PathVariable id: Long,
         @Valid @RequestBody request: DishUpdateRequest
@@ -42,6 +45,7 @@ class DishController(
         ResponseEntity.ok(dishService.update(id, request.toDomain()).toResponse())
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     fun deleteDish(@PathVariable id: Long): ResponseEntity<Void> {
         dishService.delete(id)
         return ResponseEntity.noContent().build()

@@ -6,6 +6,8 @@ import com.example.lab5.domain.exception.NotFoundException
 import com.example.lab5.domain.model.Dish
 import com.example.lab5.domain.model.Order
 import com.example.lab5.domain.model.OrderStatus
+import com.example.lab5.domain.model.Role
+import org.springframework.security.access.AccessDeniedException
 import com.example.lab5.domain.port.OrderRepositoryPort
 import com.example.lab5.domain.port.UserRepositoryPort
 import com.example.lab5.infrastructure.jpa.repository.DishJpaRepository
@@ -27,6 +29,14 @@ class OrderService(
         logger.info { "Fetching order id=$id" }
         return orderRepositoryPort.findById(id)
             ?: throw NotFoundException("Order with id=$id not found")
+    }
+
+    fun findById(id: Long, currentUserId: Long, currentUserRole: Role): Order {
+        val order = findById(id)
+        if (currentUserRole != Role.ADMIN && order.userId != currentUserId) {
+            throw AccessDeniedException("Нет доступа к этому заказу")
+        }
+        return order
     }
 
     fun create(userId: Long, dishIds: List<Long>): Order {
