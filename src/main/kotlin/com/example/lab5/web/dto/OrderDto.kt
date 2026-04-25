@@ -3,7 +3,6 @@ package com.example.lab5.web.dto
 import com.example.lab5.domain.model.Order
 import com.example.lab5.domain.model.OrderStatus
 import jakarta.validation.constraints.NotEmpty
-import jakarta.validation.constraints.NotNull
 import java.time.LocalDateTime
 
 data class OrderCreateRequest(
@@ -29,9 +28,4 @@ fun Order.toResponse() = OrderResponse(
     status = status,
     createdAt = createdAt,
     dishes = dishes.map { it.toResponse() }
-)
-
-fun OrderCreateRequest.toDomain() = Order(
-    userId = userId!!,
-    status = OrderStatus.PENDING
 )
