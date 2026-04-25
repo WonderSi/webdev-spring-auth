@@ -1,5 +1,6 @@
 package com.example.lab5.infrastructure.security
 
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -31,6 +32,11 @@ class SecurityConfig(
                 it.requestMatchers(HttpMethod.GET, "/api/v1/restaurants/**").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/v1/restaurants/*/dishes/**").permitAll()
                 it.anyRequest().authenticated()
+            }
+            .exceptionHandling {
+                it.authenticationEntryPoint { _, response, _ ->
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+                }
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
 
