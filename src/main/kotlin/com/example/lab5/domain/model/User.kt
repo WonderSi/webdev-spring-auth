@@ -5,5 +5,7 @@ data class User(
     val email: String,
     val firstName: String,
     val lastName: String,
-    val isActive: Boolean = true
+    val password: String = "",
+    val isActive: Boolean = true,
+    val role: Role = Role.USER
 )

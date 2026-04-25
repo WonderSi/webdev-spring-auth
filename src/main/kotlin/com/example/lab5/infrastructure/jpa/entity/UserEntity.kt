@@ -1,5 +1,6 @@
 package com.example.lab5.infrastructure.jpa.entity
 
+import com.example.lab5.domain.model.Role
 import com.example.lab5.domain.model.User
 import jakarta.persistence.*
 
@@ -20,16 +21,25 @@ class UserEntity(
     val lastName: String,
 
     @Column(nullable = false)
-    val isActive: Boolean = true
+    val password: String,
+
+    @Column(nullable = false)
+    val isActive: Boolean = true,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    val role: Role = Role.USER
 ) {
-    constructor() : this(0, "", "", "", true)
+    constructor() : this(0, "", "", "", "", true, Role.USER)
 
     fun toDomain() = User(
         id = id,
         email = email,
         firstName = firstName,
         lastName = lastName,
-        isActive = isActive
+        password = password,
+        isActive = isActive,
+        role = role
     )
 
     companion object {
@@ -38,7 +48,9 @@ class UserEntity(
             email = user.email,
             firstName = user.firstName,
             lastName = user.lastName,
-            isActive = user.isActive
+            password = user.password,
+            isActive = user.isActive,
+            role = user.role
         )
     }
 }
