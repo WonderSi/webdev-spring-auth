@@ -9,6 +9,8 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -56,6 +58,22 @@ class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(ErrorResponse(400, "Invalid request body"))
+    }
+
+    @ExceptionHandler(BadCredentialsException::class)
+    fun handleBadCredentials(e: BadCredentialsException): ResponseEntity<ErrorResponse> {
+        logger.warn { "BadCredentials: ${e.message}" }
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ErrorResponse(401, "Неверный email или пароль"))
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
+        logger.warn { "AccessDenied: ${e.message}" }
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(ErrorResponse(403, "Доступ запрещён"))
     }
 
     @ExceptionHandler(Exception::class)
